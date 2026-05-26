@@ -67,8 +67,6 @@
   .send-btn:disabled{opacity:0.4;cursor:default}
   .send-btn svg{width:17px;height:17px;fill:var(--cream)}
   .input-hint{font-size:11px;color:var(--text-light);margin-top:7px}
-  .sidebar::-webkit-scrollbar{width:3px}
-  .sidebar::-webkit-scrollbar-thumb{background:var(--bordeaux-border)}
 </style>
 </head>
 <body>
@@ -137,76 +135,42 @@
   </div>
 </div>
 <script>
-const SYSTEM_PROMPT = `Você é o PROSPECTOR PRO — o sistema de implementação de vendas do AV SALES, módulo do ecossistema AV LAB. Rápido, direto ao ponto, mastigado e funcional — para AVs que já faturam mas estão travadas. Toda resposta: direta, acionável, sem teoria vazia, sem motivacional, só o que funciona. Colete: nome, nicho, serviços, clientes, ticket médio, canais usados, maior dificuldade, verba para anúncios, redes sociais, horas disponíveis. Personalize TUDO. MÓDULO 1: nicho ultra específico, PUV, 3 problemas do ICP, declaração de posicionamento, avatar completo, concorrência. MÓDULO 2: plano 30 dias, 20 posts, 8 Reels, 4 carrosséis, 4 stories, calendário, LinkedIn, Instagram, grupos, parcerias. MÓDULO 3: lista de leads, scripts WhatsApp completos + follow-ups + objeções, DM Instagram, cold email sequência 4, LinkedIn, cold call. MÓDULO 4: Meta Ads estrutura + 3 copies, Google Ads, LinkedIn Ads, impulsionamento R$5/dia. MÓDULO 5: funil completo, isca digital, nutrição 7 mensagens, reunião de diagnóstico, proposta Bronze/Prata/Ouro. MÓDULO 6: reativação base fria, scripts multicanal, sequência 3 toques. MÓDULO 7: ferramentas gratuitas e pagas, 3 fluxos, CRM completo. MÓDULO 8: 5 campanhas prontas. MÓDULO 9: depoimentos, portfólio, PR orgânico. MÓDULO 10: dashboard, análise por canal, metas progressivas. [DIAGNÓSTICO] analise e indique por onde começar. [TREINAMENTO] plano semana a semana. [SCRIPT] script pronto. [COPY] copy pronto. [OBJEÇÃO:] resposta pronta. Sempre: scripts prontos, resultado em 7 dias, próximo passo claro, sem enrolação.`;
-
-let history = [];
-let isLoading = false;
-
+const SYSTEM_PROMPT=`Você é o PROSPECTOR PRO — sistema de implementação de vendas do AV SALES, módulo do AV LAB. Rápido, direto, mastigado, funcional. Para AVs que faturam mas estão travadas. Zero enrolação. Colete: nome, nicho, serviços, clientes, ticket, canais, dificuldade, verba ads, redes, horas. Personalize TUDO. MÓDULO 1: nicho específico, PUV, 3 problemas ICP, posicionamento, avatar, concorrência. MÓDULO 2: plano 30 dias, 20 posts, 8 Reels, 4 carrosséis, stories, calendário, LinkedIn, Instagram, grupos, parcerias. MÓDULO 3: lista leads, scripts WhatsApp+follow-ups+objeções, DM Instagram 5 msgs, cold email 4 emails, LinkedIn, cold call. MÓDULO 4: Meta Ads+3 copies, Google Ads, LinkedIn Ads, impulsionamento R$5/dia. MÓDULO 5: funil completo, isca digital, nutrição 7 msgs, reunião diagnóstico, proposta Bronze/Prata/Ouro. MÓDULO 6: reativação base fria, scripts multicanal, 3 toques. MÓDULO 7: ferramentas, fluxos, CRM. MÓDULO 8: 5 campanhas prontas. MÓDULO 9: depoimentos, portfólio, PR. MÓDULO 10: dashboard, análise, metas. Comandos: [DIAGNÓSTICO][TREINAMENTO][SCRIPT][COPY][OBJEÇÃO:][REVISAR][CRIAR CAMPANHA]. Sempre: scripts prontos, resultado 7 dias, próximo passo claro, sem enrolação.`;
+let history=[],isLoading=false;
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px'}
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}}
 function clickModule(el,cmd){document.querySelectorAll('.module-item').forEach(i=>i.classList.remove('active'));el.classList.add('active');sendChip(cmd)}
 function sendChip(text){document.getElementById('input').value=text;sendMessage()}
-
 function addMessage(role,content){
   const messages=document.getElementById('messages');
-  const div=document.createElement('div');
-  div.className=`msg ${role==='user'?'user':'ai'}`;
-  const avatar=document.createElement('div');
-  avatar.className=`avatar ${role==='user'?'user-av':'ai'}`;
-  avatar.textContent=role==='user'?'AV':'P';
-  const bubble=document.createElement('div');
-  bubble.className='bubble';
-  bubble.innerHTML=formatMessage(content);
-  div.appendChild(avatar);div.appendChild(bubble);
-  messages.appendChild(div);
-  messages.scrollTop=messages.scrollHeight;
+  const div=document.createElement('div');div.className=`msg ${role==='user'?'user':'ai'}`;
+  const avatar=document.createElement('div');avatar.className=`avatar ${role==='user'?'user-av':'ai'}`;avatar.textContent=role==='user'?'AV':'P';
+  const bubble=document.createElement('div');bubble.className='bubble';bubble.innerHTML=formatMessage(content);
+  div.appendChild(avatar);div.appendChild(bubble);messages.appendChild(div);messages.scrollTop=messages.scrollHeight;
 }
-
 function formatMessage(text){
-  return text
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/^#{1,3} (.+)$/gm,'<h3>$1</h3>')
-    .replace(/^━+$/gm,'<hr>')
-    .replace(/^\- (.+)$/gm,'<li>$1</li>')
-    .replace(/(<li>[\s\S]*?<\/li>)+/g,m=>`<ul>${m}</ul>`)
-    .split('\n\n').map(p=>p.startsWith('<')?p:`<p>${p}</p>`).join('');
+  return text.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/^#{1,3} (.+)$/gm,'<h3>$1</h3>').replace(/^━+$/gm,'<hr>').replace(/^\- (.+)$/gm,'<li>$1</li>').replace(/(<li>[\s\S]*?<\/li>)+/g,m=>`<ul>${m}</ul>`).split('\n\n').map(p=>p.startsWith('<')?p:`<p>${p}</p>`).join('');
 }
-
 function addTyping(){
   const messages=document.getElementById('messages');
-  const div=document.createElement('div');
-  div.className='msg ai';div.id='typing-indicator';
+  const div=document.createElement('div');div.className='msg ai';div.id='typing-indicator';
   const avatar=document.createElement('div');avatar.className='avatar ai';avatar.textContent='P';
-  const bubble=document.createElement('div');bubble.className='bubble';
-  bubble.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';
-  div.appendChild(avatar);div.appendChild(bubble);
-  messages.appendChild(div);messages.scrollTop=messages.scrollHeight;
+  const bubble=document.createElement('div');bubble.className='bubble';bubble.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';
+  div.appendChild(avatar);div.appendChild(bubble);messages.appendChild(div);messages.scrollTop=messages.scrollHeight;
 }
-
 function removeTyping(){const t=document.getElementById('typing-indicator');if(t)t.remove()}
-
 async function sendMessage(){
-  const input=document.getElementById('input');
-  const text=input.value.trim();
+  const input=document.getElementById('input');const text=input.value.trim();
   if(!text||isLoading)return;
   input.value='';input.style.height='auto';
   isLoading=true;document.getElementById('send-btn').disabled=true;
-  addMessage('user',text);
-  history.push({role:'user',content:text});
-  addTyping();
+  addMessage('user',text);history.push({role:'user',content:text});addTyping();
   try{
-    const res=await fetch('/api/chat',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({messages:history,system:SYSTEM_PROMPT})
-    });
+    const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:history,system:SYSTEM_PROMPT})});
     const data=await res.json();
-    const reply=data.content||'Erro ao processar. Tente novamente.';
-    removeTyping();addMessage('ai',reply);
-    history.push({role:'assistant',content:reply});
-  }catch{
-    removeTyping();addMessage('ai','Erro de conexão. Tente novamente.');
-  }
+    const reply=data.content||'Erro ao processar.';
+    removeTyping();addMessage('ai',reply);history.push({role:'assistant',content:reply});
+  }catch{removeTyping();addMessage('ai','Erro de conexão. Tente novamente.');}
   isLoading=false;document.getElementById('send-btn').disabled=false;
 }
 </script>
